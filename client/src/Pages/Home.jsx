@@ -1,33 +1,70 @@
-import React, {useState, useEffect} from "react"
-import {Container, Form, Row, Col, Button, Table} from "react-bootstrap"
+import React, {useState, useEffect} from "react";
+import {Container, Form, Row, Col, Button, Table} from "react-bootstrap";
+import axios from "../API/axios";
+import moment from "moment";
+import Swal from "sweetalert2";
 
 function Home() {
+    const [username, setUsername] = useState("");
+    const [repos, setRepos] = useState([]);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        document.body.style.backgroundColor = "#FFC107";
+        document.body.style.backgroundColor = "#E1E8EB";
     }, [])
+
+    const fetchRepo = () => {
+        axios({
+            method: "GET",
+            url: `/users/${username}/repos`,
+            headers: {
+                Accept: "application/vnd.github.v3+json"
+            }
+        })
+        .then(response => {
+            const data = response.data;
+            setRepos(data);
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: 'Repositories Found',
+              })
+        })
+        .catch(err => {
+            console.log(err);
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Repositories Not Found',
+              })
+        })
+    }
+
+    const handleUsername = (event) => {
+        event.preventDefault();
+        fetchRepo();
+    } 
 
     return(
         <Container>
             <section id="header">
                 <div className="text-center p-5">
-                    <h1>REPOSITORIES RETRIEVER</h1>
+                    <h1>GITHUB REPOSITORIES</h1>
                 </div>
                 <hr></hr>
             </section>
 
             <section id="input-user">
-                <div className="mb-3 p-3">
-                    <Form>
+                <div className="mb-3 pt-3 pb-3">
+                    <Form onSubmit={(event) => handleUsername(event)}>
                         <Form.Label className="d-flex">Github Username</Form.Label>
                         <Row>
                             <Col md={10} xs={8}>
                                 <Form.Group className="mb-3">
-                                    
-                                    <Form.Control type="text" placeholder="Enter username.."/>
+                                    <Form.Control type="text" placeholder="Enter username.." onChange={(event) => setUsername(event.target.value)}/>
                                 </Form.Group>
                             </Col>
-                            <Col md={2} col={4} >
+                            <Col md={2} xs={4} >
                                 <Button variant="primary" type="submit">SUBMIT</Button>
                             </Col>
                         </Row>
@@ -52,34 +89,19 @@ function Home() {
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <th scope="row">1</th>
-                            <td>Argon Assault</td>
-                            <td>Unity</td>
-                            <td>https://github.com/rezanasu/Argon_Assault</td>
-                            <td>https://github.com/rezanasu/Argon_Assault</td>
-                          </tr>
-                          <tr>
-                            <th scope="row">2</th>
-                            <td>Project-Boost</td>
-                            <td>Unity</td>
-                            <td>https://github.com/rezanasu/Project-Boost</td>
-                            <td>https://github.com/rezanasu/Argon_Assault</td>
-                          </tr>
-                          <tr>
-                            <th scope="row">3</th>
-                            <td>Realm-Rush</td>
-                            <td>Unity</td>
-                            <td>https://github.com/rezanasu/Realm-Rush</td>
-                            <td>https://github.com/rezanasu/Argon_Assault</td>
-                          </tr>
-                          <tr>
-                            <th scope="row">4</th>
-                            <td>Realm-Rush</td>
-                            <td>Unity</td>
-                            <td>https://github.com/rezanasu/Realm-Rush</td>
-                            <td>https://github.com/rezanasu/Argon_Assault</td>
-                          </tr>
+                        {
+                            repos.map((repo, index) => {
+                                return (
+                                    <tr key={index}>
+                                        <th scope="row">{index+1}</th>
+                                        <td>{repo.name}</td>
+                                        <td>{repo.description}</td>
+                                        <td>{repo.html_url}</td>
+                                        <td>{moment(repo.created_at).format("MMMM Do YYYY")}</td>
+                                    </tr>
+                                )
+                            })
+                        }   
                     </tbody>
                 </Table>
             </section>
