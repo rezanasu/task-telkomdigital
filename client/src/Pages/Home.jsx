@@ -8,10 +8,11 @@ function Home() {
     const [username, setUsername] = useState("");
     const [repos, setRepos] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [foundUser, setFoundUser] = useState("");
 
     useEffect(() => {
         document.body.style.backgroundColor = "#E1E8EB";
-    }, [])
+    }, []);
 
     const fetchRepo = () => {
         axios({
@@ -24,6 +25,8 @@ function Home() {
         .then(response => {
             const data = response.data;
             setRepos(data);
+            setFoundUser(username);
+            setLoading(true);
             Swal.fire({
                 icon: 'success',
                 title: 'Success',
@@ -42,8 +45,57 @@ function Home() {
 
     const handleUsername = (event) => {
         event.preventDefault();
+        if(loading === false) {
+            console.log("Load....")
+        }
         fetchRepo();
     } 
+
+    const content = () => {
+        return (
+            <section id="content">
+                <div className="d-flex mb-3">
+                    <h3>List of {foundUser}'s public repositories</h3>
+                </div>
+                <Table striped bordered hover responsive variant="dark">
+                    <thead>
+                        <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>URL</th>
+                        <th>Created_At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {
+                            repos.map((repo, index) => {
+                                return (
+                                    <tr key={index}>
+                                        <th scope="row">{index+1}</th>
+                                        <td>{repo.name}</td>
+                                        <td>{repo.description}</td>
+                                        <td>{repo.html_url}</td>
+                                        <td>{moment(repo.created_at).format("MMMM Do YYYY")}</td>
+                                    </tr>
+                                )
+                            })
+                        }   
+                    </tbody>
+                </Table>
+            </section>
+        )
+    }
+
+    const emptyContent = () => {
+        return(
+            <div className="d-flex flex-column align-items-start">
+                <h4 className="mb-3">HINT</h4>
+                <p>1. Please insert username</p>
+                <p>2. Click submit to get the list of repositories</p>
+            </div>
+        )
+    }
 
     return(
         <Container>
@@ -74,37 +126,8 @@ function Home() {
                 <hr></hr>
             </section>
 
-            <section id="content">
-                <div className="d-flex mb-3">
-                    <h3>LIST OF PUBLIC REPOSITORIES</h3>
-                </div>
-                <Table striped bordered hover responsive variant="dark">
-                    <thead>
-                        <tr>
-                        <th>#</th>
-                        <th>Name</th>
-                        <th>Description</th>
-                        <th>URL</th>
-                        <th>Created_At</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {
-                            repos.map((repo, index) => {
-                                return (
-                                    <tr key={index}>
-                                        <th scope="row">{index+1}</th>
-                                        <td>{repo.name}</td>
-                                        <td>{repo.description}</td>
-                                        <td>{repo.html_url}</td>
-                                        <td>{moment(repo.created_at).format("MMMM Do YYYY")}</td>
-                                    </tr>
-                                )
-                            })
-                        }   
-                    </tbody>
-                </Table>
-            </section>
+            {loading ? content() : emptyContent()}
+            
         </Container>
     );
 }
